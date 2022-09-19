@@ -7,25 +7,51 @@
 const hre = require("hardhat");
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
-  const unlockTime = currentTimestampInSeconds + ONE_YEAR_IN_SECS;
+  // We get the contract to deploy
 
-  const lockedAmount = hre.ethers.utils.parseEther("1");
+  const [deployer] = await ethers.getSigners();
+  console.log("Deployer: ", await deployer.address);
+  
 
-  const Lock = await hre.ethers.getContractFactory("Lock");
-  const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
+  // for Flowers contract
+  const fixedNFTAmount = 3;
+  const Flowers = await ethers.getContractFactory("flowers");
+  const flowers = await Flowers.deploy(fixedNFTAmount);
+  const flowerTokenAddress = flowers.address;  
+  console.log("Flowers deployed to:", flowerTokenAddress);
 
-  await lock.deployed();
+  //For energy Token
+  const EnergyToken = await ethers.getContractFactory("energyToken");
+  const energyToken = await EnergyToken.deploy();
+  const energyTokenAddress = energyToken.address;
 
-  console.log(
-    `Lock with 1 ETH and unlock timestamp ${unlockTime} deployed to ${lock.address}`
-  );
+  console.log("EnergyToken deployed to:", energyTokenAddress);
+
+  //For Marketplace
+  const NFTBuySell = await ethers.getContractFactory("NFTBuySell");
+  const nftBuySell = await NFTBuySell.deploy(flowerTokenAddress, energyTokenAddress, 5, deployer.address);
+
+  console.log("Marketplace deployed to:", nftBuySell.address);
+
+  //for nft Staking
+  const NFTStaking = await ethers.getContractFactory("stakeFlowers");
+  const nftStaking = await NFTStaking.deploy(flowerTokenAddress, energyTokenAddress);
+
+  console.log("NFTStaking deployed to:", nftStaking.address);
+
+  //for upgrading flowers
+  const UpgradeFlowers = await ethers.getContractFactory("upgrade");
+  const upgradeFlowers = await UpgradeFlowers.deploy(flowerTokenAddress, energyTokenAddress);
+
+  console.log("UpgradeFlowers deployed to:", upgradeFlowers.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+

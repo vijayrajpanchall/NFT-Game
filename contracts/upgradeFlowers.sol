@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import "Interfaces/IFlowers.sol";
-import "Interfaces/IEnergyToken.sol";
+import "./Interfaces/IFlowers.sol";
+import "./Interfaces/IEnergyToken.sol";
 
 contract upgrade {
     IFlowers public nftContract;
