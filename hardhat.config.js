@@ -15,14 +15,14 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 });
 
 module.exports = {
-  networks: {
-    ropsten: {
-      url: process.env.TEST_NET_API_KEY,
-      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
-    },
-  etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
-  },
+  // networks: {
+  //   ropsten: {
+  //     url: process.env.TEST_NET_API_KEY,
+  //     accounts: [process.env.DEPLOYER_PRIVATE_KEY],
+  //   },
+  // etherscan: {
+  //   apiKey: process.env.ETHERSCAN_API_KEY,
+  // },
   
   solidity: {
     compilers: [
@@ -46,4 +46,4 @@ module.exports = {
       },
     ],
   }
-};
+}

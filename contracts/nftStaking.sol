@@ -6,10 +6,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
-import "./Interfaces/IRewardToken.sol";
+import "./Interfaces/IEnergyToken.sol";
 
 contract stakeFlowers is Ownable, ERC721Holder {
-    IRewardToken public rewardsToken;
+    IEnergyToken public rewardsToken;
     IERC721 public nft;
 
     uint256 public stakedTotal;
@@ -24,7 +24,7 @@ contract stakeFlowers is Ownable, ERC721Holder {
         uint256 rewardsReleased;
     }
 
-    constructor(IERC721 _nft, IRewardToken _rewardsToken) {
+    constructor(IERC721 _nft, IEnergyToken _rewardsToken) {
         nft = _nft;
         rewardsToken = _rewardsToken;
     }

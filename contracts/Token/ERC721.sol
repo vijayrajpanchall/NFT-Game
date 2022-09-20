@@ -116,6 +116,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerable 
             return string(abi.encodePacked(base, _tokenURI));
         }
         return string(abi.encodePacked(base, tokenId.toString()));
+        // return bytes(base).length > 0 ? string(abi.encodePacked(base, tokenId.toString())) : "";
     }
 
     function baseURI() public view virtual returns (string memory) {

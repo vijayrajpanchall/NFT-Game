@@ -1,0 +1,9 @@
+{   
+   "description": "This is NFT of Flower",      
+   "image": "https://gateway.pinata.cloud/ipfs/QmSRxXtUSQ4tDRayB1xhgLoc6TmtpX9KeK32o1ibTDY787/5.png",  
+   "name": "Flower NFT",   
+   "attributes": [
+       { "trait_type": "colour", "value": "Red" },      
+       { "trait_type": "Petals", "value": "1" }      
+   ]
+}
