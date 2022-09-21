@@ -18,10 +18,11 @@ contract upgrade {
     
     function upgradeFlowers(uint256 tokenId, uint256 energyTokenAmount) 
     public returns(uint256 upgradedpetals){    
+        require(msg.sender == nftContract.ownerOf(tokenId),"You're not the owner of this token Id");
         require(energyTokenAmount >= 10,"Minimum amount is 10");
 
         uint256 energyBalace = tokenContract.balanceOf(msg.sender);
-        require(energyBalace >= 10,"Insufficient Energy token");
+        require(energyBalace >= 10,"Insufficient Energy tokens");
 
         uint256 remainder = energyTokenAmount%10;
         uint256 energyBurnAmount = energyTokenAmount - remainder;

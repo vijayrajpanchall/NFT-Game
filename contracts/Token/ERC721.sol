@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
@@ -11,8 +10,7 @@ import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "../library/String.sol";
-import "../library/Integers.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 import "./ERC165.sol";
 
 contract ERC721 is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerable {
@@ -20,7 +18,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerable 
     using Address for address;
     using EnumerableSet for EnumerableSet.UintSet;
     using EnumerableMap for EnumerableMap.UintToAddressMap;
-    using Integers for uint256;
+    using Strings for uint256;
 
     bytes4 private constant _ERC721_RECEIVED = 0x150b7a02;
 
@@ -45,10 +43,6 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerable 
     // mapping for token URIs
 
     mapping (uint256 => string) private _tokenURIs;
-
-   // mapping for token royaltyFee    
-
-    mapping(uint256 => uint256) private _royaltyFee;
 
   // mapping for token creator
 
@@ -115,16 +109,13 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerable 
         if (bytes(_tokenURI).length > 0) {
             return string(abi.encodePacked(base, _tokenURI));
         }
-        return string(abi.encodePacked(base, tokenId.toString()));
+        string memory __base = string(abi.encodePacked(base, tokenId.toString()));
+        return string(abi.encodePacked(__base, ".json"));
         // return bytes(base).length > 0 ? string(abi.encodePacked(base, tokenId.toString())) : "";
     }
 
     function baseURI() public view virtual returns (string memory) {
         return _baseURI;
-    }
-
-    function royaltyFee(uint256 tokenId) public view  returns(uint256) {
-        return _royaltyFee[tokenId];
     }
 
     function getCreator(uint256 tokenId) public view  returns(address) {
@@ -232,16 +223,16 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerable 
         return (spender == owner || getApproved(tokenId) == spender || ERC721.isApprovedForAll(owner, spender));
     }
 
-    function _safeMint(address to, uint256 tokenId, uint256 fee) internal virtual {
-        _safeMint(to, tokenId, fee, "");
+    function _safeMint(address to, uint256 tokenId) internal virtual {
+        _safeMint(to, tokenId, "");
     }
 
-    function _safeMint(address to, uint256 tokenId, uint256 fee, bytes memory _data) internal virtual {
-        _mint(to, tokenId, fee);
+    function _safeMint(address to, uint256 tokenId, bytes memory _data) internal virtual {
+        _mint(to, tokenId);
         require(_checkOnERC721Received(address(0), to, tokenId, _data), "ERC721: transfer to non ERC721Receiver implementer");
     }
 
-    function _mint(address to, uint256 tokenId, uint256 fee) internal virtual {
+    function _mint(address to, uint256 tokenId) internal virtual {
         require(to != address(0), "ERC721: mint to the zero address");
         require(!_exists(tokenId), "ERC721: token already minted");
 
@@ -251,7 +242,6 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerable 
 
         _tokenOwners.set(tokenId, to);
         _creator[tokenId] = msg.sender;
-        _royaltyFee[tokenId] = fee;
 
         emit Transfer(address(0), to, tokenId);
        

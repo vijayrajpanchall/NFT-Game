@@ -9,3 +9,7 @@ typechain-types
 cache
 artifacts
 
+contracts/.deps
+contracts/artifacts
+
+contracts/Token/artifacts

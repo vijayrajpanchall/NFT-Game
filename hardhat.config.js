@@ -1,9 +1,6 @@
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-etherscan");
-// require("hardhat-gas-reporter");
-// require("solidity-coverage");
-// require('hardhat-docgen');
-// require("@nomiclabs/hardhat-solhint");
+
 const dotenv = require("dotenv");
 dotenv.config();
 
@@ -28,15 +25,6 @@ module.exports = {
     compilers: [
       {
         version: "0.8.6",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
-        },
-      },
-      {
-        version: "0.5.0",
         settings: {
           optimizer: {
             enabled: true,

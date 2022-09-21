@@ -1,43 +1,58 @@
-// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-// import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "./Token/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "hardhat/console.sol";
+import "./Token/ERC721.sol";
+import "./Interfaces/IFlowers.sol";
 
-contract flowers is ERC721{
+contract flowers is ERC721, IFlowers{
         using Counters for Counters.Counter;
-        // using Integers for uint256;
         Counters.Counter private _tokenIdCounter;
 
-        // mapping(uint256 => uint256) private tokenIdToPetalsCount;
         mapping(address => mapping(uint256 => uint256)) private userOwnesPetals;       
 
         uint256 public fixedNFTAmount = 10;
         constructor() ERC721("Flower NFT", "Flower"){
-               // _setBaseURI("https://gateway.pinata.cloud/ipfs/QmWF8jQYSLnqzYh5LqBVxR1RKNbPFBw77zmA8sRdChyA9t/");
+                _setBaseURI("https://gateway.pinata.cloud/ipfs/QmWF8jQYSLnqzYh5LqBVxR1RKNbPFBw77zmA8sRdChyA9t/");
         }
 
-        function mintFlowerNFT(uint256 royaltyFee) public returns (uint256) {
+        function mintFlowerNFT() public returns (uint256) {
                 _tokenIdCounter.increment();
                 uint256 newItemId = _tokenIdCounter.current();
                 require(newItemId <= fixedNFTAmount,"Exceeds the minting Limit");
 
-                _safeMint(msg.sender, newItemId, royaltyFee);
+                _safeMint(msg.sender, newItemId);
                 
-                userOwnesPetals[msg.sender][newItemId] += 1;
-                _setTokenURI(newItemId, "1.json");
+                userOwnesPetals[msg.sender][newItemId] = 1;
+                uint256 petals = userOwnesPetals[msg.sender][newItemId];
+                
+                emit FlowerMinted(
+                        msg.sender, 
+                        newItemId,  
+                        petals
+                );
                 
                 return newItemId;
         }
 
-        function upgradePetals(address to, uint256 id, uint256 _amount) external {
-                userOwnesPetals[to][id] += _amount;
+        function upgradePetals(address account, uint256 tokenId, uint256 _amount) external override {
+                userOwnesPetals[account][tokenId] += _amount;
+
+                emit PetalsUpgraded(
+                        account,
+                        tokenId,
+                        _amount
+                );
         }
 
-        function balanceOfPetals(address to, uint256 nftId) public view returns(uint256){
+        function balanceOfPetals(address to, uint256 nftId) public view override returns(uint256){
                 return userOwnesPetals[to][nftId];
         }        
+
+        function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual override {
+                uint256 petals = userOwnesPetals[from][tokenId];
+                delete userOwnesPetals[from][tokenId];
+                userOwnesPetals[to][tokenId] += petals;
+        }
 }
