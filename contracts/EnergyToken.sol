@@ -6,12 +6,12 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 contract energyToken is ERC20{
     constructor() ERC20("Energy Token", "Energy"){}
 
-    function mint(address to, uint256 amount) public {
-        _mint(to, amount);
+    function mint(address account, uint256 amount) public {
+        _mint(account, amount);
     }
 
-    function burn(address to, uint256 amount) public {
-        _burn(to, amount);
+    function burn(address account, uint256 amount) public {
+        _burn(account, amount);
     }
 }
 

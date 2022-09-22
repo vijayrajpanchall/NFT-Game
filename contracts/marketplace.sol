@@ -10,21 +10,13 @@ contract flowerMarketplace is ERC721Holder, ReentrancyGuard {
     using Counters for Counters.Counter;
     Counters.Counter private _itemIds;
     Counters.Counter private _itemsSold;
-
+    
     IERC721 public nftContract;
 
     address payable owner;
 
     uint256 public marketingFee;
     address payable marketingWallet;
-
-    constructor(address _nftContract, uint256 _fee,address _marketingWallet) {
-        owner = payable(msg.sender);
-        nftContract = IERC721(_nftContract);
-        marketingFee = _fee;
-        marketingWallet = payable(_marketingWallet);
-    }
-
     struct MarketItem {
         address nftAddress;
         uint256 itemId;
@@ -52,6 +44,12 @@ contract flowerMarketplace is ERC721Holder, ReentrancyGuard {
         uint256 totalPrice,
         bool sold
     );
+    constructor(address _nftContract, uint256 _fee,address _marketingWallet) {
+        owner = payable(msg.sender);
+        nftContract = IERC721(_nftContract);
+        marketingFee = _fee;
+        marketingWallet = payable(_marketingWallet);
+    }
 
     function SetMarketingFee(uint256 _fee) public  {
         require(msg.sender == owner, "Only owner can update marketingFee");
@@ -62,7 +60,7 @@ contract flowerMarketplace is ERC721Holder, ReentrancyGuard {
         require(msg.sender == owner, "Only owner can update wallet");
         marketingWallet = payable(_marketingWallet);
     } 
-
+    
     
     /* Places an item for sale on the marketplace */
     function createMarketItem(uint256 tokenId, uint256 priceInEther) public nonReentrant {

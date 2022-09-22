@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
@@ -14,7 +13,7 @@ contract stakeFlowers is Ownable, ERC721Holder {
 
     uint256 public stakedTotal;
     uint256 public stakingStartTime;
-    uint256 constant stakingTime = 180 seconds;
+    uint256 constant stakingTime = 10 seconds;
     uint256 constant token = 10e18;
     
     struct Staker {
@@ -23,12 +22,6 @@ contract stakeFlowers is Ownable, ERC721Holder {
         uint256 balance;
         uint256 rewardsReleased;
     }
-
-    constructor(IERC721 _nft, IEnergyToken _rewardsToken) {
-        nft = _nft;
-        rewardsToken = _rewardsToken;
-    }
-
     /// @notice mapping of a staker to its wallet
     mapping(address => Staker) public stakers;
 
@@ -53,6 +46,11 @@ contract stakeFlowers is Ownable, ERC721Holder {
 
     /// @notice Emergency unstake tokens without rewards
     event EmergencyUnstake(address indexed user, uint256 tokenId);
+
+    constructor(IERC721 _nft, IEnergyToken _rewardsToken) {
+        nft = _nft;
+        rewardsToken = _rewardsToken;
+    }
 
     function initStaking() public onlyOwner {
         //needs access control
@@ -134,9 +132,6 @@ contract stakeFlowers is Ownable, ERC721Holder {
         );
         Staker storage staker = stakers[_user];
 
-        // uint256 lastIndex = staker.tokenIds.length - 1;
-        // uint256 lastIndexKey = staker.tokenIds[lastIndex];
-        
         if (staker.tokenIds.length > 0) {
             staker.tokenIds.pop();
         }
@@ -167,8 +162,6 @@ contract stakeFlowers is Ownable, ERC721Holder {
 
                 staker.tokenStakingCoolDown[ids[i]] = block.timestamp + partialTime;
 
-                // console.logUint(staker.tokenStakingCoolDown[ids[i]]);
-                // console.logUint(staker.balance);
             }
         }
     }

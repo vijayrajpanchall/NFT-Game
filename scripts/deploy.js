@@ -14,9 +14,8 @@ async function main() {
   
 
   // for Flowers contract
-  const fixedNFTAmount = 3;
   const Flowers = await ethers.getContractFactory("flowers");
-  const flowers = await Flowers.deploy(fixedNFTAmount);
+  const flowers = await Flowers.deploy();
   const flowerTokenAddress = flowers.address;  
   console.log("Flowers deployed to:", flowerTokenAddress);
 
@@ -28,10 +27,10 @@ async function main() {
   console.log("EnergyToken deployed to:", energyTokenAddress);
 
   //For Marketplace
-  const NFTBuySell = await ethers.getContractFactory("NFTBuySell");
-  const nftBuySell = await NFTBuySell.deploy(flowerTokenAddress, energyTokenAddress, 5, deployer.address);
+  const Marketplace = await ethers.getContractFactory("flowerMarketplace");
+  const marketplace = await Marketplace.deploy(flowerTokenAddress, 5, deployer.address);
 
-  console.log("Marketplace deployed to:", nftBuySell.address);
+  console.log("Marketplace deployed to:", marketplace.address);
 
   //for nft Staking
   const NFTStaking = await ethers.getContractFactory("stakeFlowers");

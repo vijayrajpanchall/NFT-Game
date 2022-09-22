@@ -6,21 +6,30 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "./Token/ERC721.sol";
 import "./Interfaces/IFlowers.sol";
 
-contract flowers is ERC721, IFlowers{
+contract flowers is ERC721, IFlowers, Ownable{
         using Counters for Counters.Counter;
         Counters.Counter private _tokenIdCounter;
 
-        mapping(address => mapping(uint256 => uint256)) private userOwnesPetals;       
+        mapping (address => mapping(uint256 => uint256)) private userOwnesPetals;      
+        mapping (address => bool) private whitelistedByOwner; 
 
-        uint256 public fixedNFTAmount = 10;
+        //Hardcoded this Because I only have 10 token URIs deployed on pinata
+        uint256 public constant maxNFTAmount = 10;
+
         constructor() ERC721("Flower NFT", "Flower"){
                 _setBaseURI("https://gateway.pinata.cloud/ipfs/QmWF8jQYSLnqzYh5LqBVxR1RKNbPFBw77zmA8sRdChyA9t/");
         }
 
-        function mintFlowerNFT() public returns (uint256) {
+        modifier mintingPermission{
+                require(whitelistedByOwner[msg.sender] == true 
+                || msg.sender == owner(),"Not Owner or Not Whitelisted by Owner");
+                _;
+        }
+
+        function mintFlowerNFT() public mintingPermission returns (uint256) {
                 _tokenIdCounter.increment();
                 uint256 newItemId = _tokenIdCounter.current();
-                require(newItemId <= fixedNFTAmount,"Exceeds the minting Limit");
+                require(newItemId <= maxNFTAmount,"Exceeds the minting Limit");
 
                 _safeMint(msg.sender, newItemId);
                 
@@ -36,13 +45,14 @@ contract flowers is ERC721, IFlowers{
                 return newItemId;
         }
 
-        function upgradePetals(address account, uint256 tokenId, uint256 _amount) external override {
-                userOwnesPetals[account][tokenId] += _amount;
+        function upgradePetals(address account, uint256 tokenId, uint256 amount) external override {
+                require(_exists(tokenId));
+                userOwnesPetals[account][tokenId] += amount;
 
                 emit PetalsUpgraded(
                         account,
                         tokenId,
-                        _amount
+                        amount
                 );
         }
 
@@ -54,5 +64,9 @@ contract flowers is ERC721, IFlowers{
                 uint256 petals = userOwnesPetals[from][tokenId];
                 delete userOwnesPetals[from][tokenId];
                 userOwnesPetals[to][tokenId] += petals;
+        }
+
+        function whitelistUser(address user) public onlyOwner{
+                whitelistedByOwner[user] = true;
         }
 }
