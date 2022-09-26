@@ -13,5 +13,6 @@ artifacts
 
 contracts/.deps
 contracts/artifacts
-
+contracts/staking.sol
+contracts/.deps
 contracts/Token/artifacts

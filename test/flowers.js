@@ -6,24 +6,23 @@ require("@nomiclabs/hardhat-waffle");
 describe("Flowers", async function(){
     let contractAddress;
     let contractOwner;
-    let whitelistedAddr;
+    let whitelistedUser;
     let nonWhitelistedAddr;
-    let addr1;
+    let user;
 
     beforeEach(async() => {        
-        const [owner, whitelistedUser, nonWhitelisted, user1] = await ethers.getSigners();
+        const [owner, WhitelistedUser, nonWhitelisted, user1] = await ethers.getSigners();
         contractOwner = owner.address;
-        whitelistedAddr = whitelistedUser;
+        whitelistedUser = WhitelistedUser;
         nonWhitelistedAddr = nonWhitelisted;
-        addr1 = user1;
-        
+        user = user1;        
 
         const Flowers = await ethers.getContractFactory("flowers");
 
         contractAddress = await Flowers.deploy();
     })
 
-    it("Initially Every NFT token Id contains 1 petal:", async function () {
+    it("Should return 1 petal initially when NFT minted", async function () {
         await contractAddress.mintFlowerNFT();
 
         expect(await contractAddress.balanceOfPetals(contractOwner, 1)).to.equal(1);
@@ -44,21 +43,21 @@ describe("Flowers", async function(){
         await contractAddress.mintFlowerNFT();
 
         const afterMinting = await contractAddress.balanceOf(contractOwner);
-        expect(afterMinting).to.be.equal(beforeMinting + 1);
+        expect(afterMinting).to.be.equal(1);
     }); 
 
 
 
     it("Whitelisted user can mint NFT", async function () {    
-        await contractAddress.whitelistUser(whitelistedAddr.address);
+        await contractAddress.whitelistUser(whitelistedUser.address);
         let functionCalled;
-        if (await contractAddress.connect(whitelistedAddr).mintFlowerNFT()){
+        if (await contractAddress.connect(whitelistedUser).mintFlowerNFT()){
             functionCalled = 1;
         }       
         expect(functionCalled).to.be.equal(1);
     });   
 
-    it("Non - Whitelisted user cann't mint NFT", async function () {
+    it("Non - Whitelisted user can not mint NFT", async function () {
         await expect( contractAddress
             .connect(nonWhitelistedAddr)
             .mintFlowerNFT())
@@ -76,111 +75,89 @@ describe("Flowers", async function(){
 
     it("Token URI should change according to minting", async function () {
         let tokenMinted = 3;
-        // let lastToken;
+
         for (let index = 0; index < tokenMinted; index++) {
             await contractAddress.mintFlowerNFT();
-            // lastToken += 1;
         }
         const tokenURI = await contractAddress.tokenURI(tokenMinted);
         const baseURI = await contractAddress.baseURI();
-        // let a = lastToken.toString();
         expect(tokenURI).to.equal(baseURI +"3.json");
     });
 
     it("Petals will transfer when user transfer NFT", async function () {
         await contractAddress.mintFlowerNFT();
 
-        await contractAddress.transferFrom(contractOwner, addr1.address, 1);
+        await contractAddress.transferFrom(contractOwner, user.address, 1);
 
-        expect(await contractAddress.connect(addr1).balanceOfPetals(addr1.address, 1)).to.equal(1);
+        expect(await contractAddress.connect(user).balanceOfPetals(user.address, 1)).to.equal(1);
+    });
+
+    it("Should revert if user wants upgrade petals but provide less energy tokens", async function () {
+        await contractAddress.mintFlowerNFT();
+        const EnergyToken = await ethers.getContractFactory("energyToken");
+        const energyToken = await EnergyToken.deploy();
+        await energyToken.mint(contractOwner, 100);
+
+        await expect(contractAddress.upgradeFlowers(1, energyToken.address, 9))
+            .to.revertedWith("Minimum amount is 10");
+    });
+
+    it("Should revert if user don't have sufficient energy token in account", async function () {
+        await contractAddress.mintFlowerNFT();
+        const EnergyToken = await ethers.getContractFactory("energyToken");
+        const energyToken = await EnergyToken.deploy();
+        await energyToken.mint(contractOwner, 9);
+
+        await expect(contractAddress.upgradeFlowers(1, energyToken.address, 10))
+            .to.revertedWith("Insufficient Energy tokens");
+    });
+
+    it("Should burn energy token after upgrade petals", async function () {
+        await contractAddress.mintFlowerNFT();
+        const EnergyToken = await ethers.getContractFactory("energyToken");
+        const energyToken = await EnergyToken.deploy();
+        await energyToken.mint(contractOwner, 100);
+
+        await contractAddress.upgradeFlowers(1, energyToken.address, 100)
+   
+        expect(await energyToken.balanceOf(contractOwner)).to.equal(0);
+    });
+
+    it("Should increase petals after providing sufficient energy tokens", async function () {
+        await contractAddress.mintFlowerNFT();
+        const EnergyToken = await ethers.getContractFactory("energyToken");
+        const energyToken = await EnergyToken.deploy();
+        await energyToken.mint(contractOwner, 100);
+
+        await contractAddress.upgradeFlowers(1, energyToken.address, 100)
+        //1petal price is 10
+        //for 100tokens = 10 petals
+        const petalsAfterUpgrade = 1 + 10; 
+        expect(await contractAddress.balanceOfPetals(contractOwner, 1))
+        .to.equal(petalsAfterUpgrade);
+    });
+    it("Should only burn those energy tokens which are using for upgrade", async function () {
+        await contractAddress.mintFlowerNFT();
+        const EnergyToken = await ethers.getContractFactory("energyToken");
+        const energyToken = await EnergyToken.deploy();
+        await energyToken.mint(contractOwner, 100);
+
+        await contractAddress.upgradeFlowers(1, energyToken.address, 95)
+        //here  user passing 95 tokens but it will burn only  90 tokens
+        //because we only needed 10 token per petal for upgrade.
+        expect(await energyToken.balanceOf(contractOwner)).to.equal(10);
+    });
+
+    it("Should revert if user is not owner of NFT and calls upgrade using energy tokens", async function () {
+        await contractAddress.mintFlowerNFT();
+        const EnergyToken = await ethers.getContractFactory("energyToken");
+        const energyToken = await EnergyToken.deploy();
+        await energyToken.mint(user.address, 100);
+
+        await expect(contractAddress.connect(user).upgradeFlowers(1, energyToken.address, 10))
+            .to.revertedWith("You're not the owner of this token Id");
     });
 })
 
-describe("Flower MarketPlace", async function () {
-    let marketplace;
-    let nftContract;
-    let marketingWallet;
-    let seller;
-    let buyer;
 
-    beforeEach(async () => {
-        const [owner, Seller, Buyer, MarketingWallet] = await ethers.getSigners();
-        contractOwner = owner.address;
-        seller = Seller;
-        buyer = Buyer;
-        marketingWallet = MarketingWallet;
 
-        const Marketplace = await ethers.getContractFactory("flowerMarketplace");
-        const NftContract = await ethers.getContractFactory("flowers");
-
-        marketplace = await Marketplace.deploy(
-            NftContract.address,
-            5,
-            marketingWallet.address
-        );
-
-        nftContract = await NftContract.deploy();
-
-    })
-
-    it("User able to list NFT on marketplace", async function () {
-        await nftContract.mintFlowerNFT();
-        await nftContract.approve(marketplace.address, 1);
-        await marketplace.createMarketItem(1, 1000000000000000000n);
-
-        expect(await nftContract.balanceOf(marketplace.address)).to.equal(1);
-
-    })
-})
-
-describe.only("Staking Flowers", async function () {
-    let stakingContract;
-    let nftContract;
-    let tokenContract;
-    let staker;
-
-    beforeEach(async () => {
-        const [owner, Staker] = await ethers.getSigners();
-        contractOwner = owner.address;
-        staker = Staker;
-
-        const StakingContract = await ethers.getContractFactory("stakeFlowers");
-        const NftContract = await ethers.getContractFactory("flowers");
-        const TokenContract = await ethers.getContractFactory("energyToken");
-
-        nftContract = await NftContract.deploy();
-
-        tokenContract = await TokenContract.deploy();
-
-        stakingContract = await StakingContract.deploy(nftContract.address, tokenContract.address);
-
-    })
-
-    it("User able to stake NFT", async function () {
-        await nftContract.mintFlowerNFT();
-        await nftContract.setApprovalForAll(stakingContract.address, true);
-
-        await stakingContract.stake([1]);
-
-        expect(await nftContract.balanceOf(stakingContract.address)).to.equal(1);
-    })
-
-    it("Should transfer to Staking Contract", async function () {
-        await nftContract.mintFlowerNFT();
-        await nftContract.setApprovalForAll(stakingContract.address, true);
-
-        await stakingContract.stake([1]);
-
-        expect(await nftContract.balanceOf(stakingContract.address)).to.equal(1);
-    })
-
-    it("Can not stake if not approved", async function () {
-        await nftContract.mintFlowerNFT();
-  
-        await expect(
-            stakingContract
-            .stake([1]))
-            .to.be.revertedWith
-            ('ERC721: approve caller is not owner nor approved for all');
-    })
-})

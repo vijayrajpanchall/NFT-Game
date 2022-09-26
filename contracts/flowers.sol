@@ -5,17 +5,19 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "./Token/ERC721.sol";
 import "./Interfaces/IFlowers.sol";
+import "./Interfaces/IEnergyToken.sol";
 
 contract flowers is ERC721, IFlowers, Ownable{
         using Counters for Counters.Counter;
         Counters.Counter private _tokenIdCounter;
+        IEnergyToken tokenContract;
 
         mapping (address => mapping(uint256 => uint256)) private userOwnesPetals;      
         mapping (address => bool) private whitelistedByOwner; 
 
         //Hardcoded this Because I only have 10 token URIs deployed on pinata
         uint256 public constant maxNFTAmount = 10;
-
+        
         constructor() ERC721("Flower NFT", "Flower"){
                 _setBaseURI("https://gateway.pinata.cloud/ipfs/QmWF8jQYSLnqzYh5LqBVxR1RKNbPFBw77zmA8sRdChyA9t/");
         }
@@ -45,8 +47,31 @@ contract flowers is ERC721, IFlowers, Ownable{
                 return newItemId;
         }
 
-        function upgradePetals(address account, uint256 tokenId, uint256 amount) external override {
-                require(_exists(tokenId));
+        function whitelistUser(address user) public onlyOwner{
+                whitelistedByOwner[user] = true;
+        }
+
+        function upgradeFlowers(uint256 tokenId, IEnergyToken _tokenContract, uint256 energyTokenAmount) 
+                public returns(uint256 upgradedpetals){    
+        tokenContract = _tokenContract;
+        require(msg.sender == ownerOf(tokenId),"You're not the owner of this token Id");
+        require(energyTokenAmount >= 10 ,"Minimum amount is 10");
+
+        uint256 energyBalace = tokenContract.balanceOf(msg.sender);
+        require(energyBalace >= 10,"Insufficient Energy tokens");
+
+        uint256 remainder = energyTokenAmount%10;
+        uint256 energyBurnAmount = energyTokenAmount - remainder;
+        uint256 petalAmount = energyTokenAmount/10;
+
+        upgradePetals(msg.sender, tokenId, petalAmount);
+
+        tokenContract.burn(msg.sender, energyBurnAmount);
+
+        upgradedpetals = balanceOfPetals(msg.sender, tokenId);
+    }
+
+        function upgradePetals(address account, uint256 tokenId, uint256 amount) private  {
                 userOwnesPetals[account][tokenId] += amount;
 
                 emit PetalsUpgraded(
@@ -64,9 +89,5 @@ contract flowers is ERC721, IFlowers, Ownable{
                 uint256 petals = userOwnesPetals[from][tokenId];
                 delete userOwnesPetals[from][tokenId];
                 userOwnesPetals[to][tokenId] += petals;
-        }
-
-        function whitelistUser(address user) public onlyOwner{
-                whitelistedByOwner[user] = true;
         }
 }

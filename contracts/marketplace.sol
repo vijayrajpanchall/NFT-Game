@@ -10,13 +10,15 @@ contract flowerMarketplace is ERC721Holder, ReentrancyGuard {
     using Counters for Counters.Counter;
     Counters.Counter private _itemIds;
     Counters.Counter private _itemsSold;
-    
-    IERC721 public nftContract;
 
-    address payable owner;
+
+    // Interface for Flower NFT
+    IERC721 public immutable nftContract;
+
+    address payable  owner;
 
     uint256 public marketingFee;
-    address payable marketingWallet;
+    address payable public marketingWallet;
     
     struct MarketItem {
         address nftAddress;
@@ -112,8 +114,8 @@ contract flowerMarketplace is ERC721Holder, ReentrancyGuard {
     function BuyFlowerNFT(uint256 itemId) public payable nonReentrant {
         uint256 totalPrice = idToMarketItem[itemId].totalPrice;
             
-        require(msg.value >= totalPrice, "Token Balance is low");
-
+        require(msg.value >= totalPrice, "Ether Balance is low");
+        
         if(msg.value > totalPrice){
             uint256 remainingBalance =  msg.value - totalPrice;
             payable(msg.sender).transfer(remainingBalance);

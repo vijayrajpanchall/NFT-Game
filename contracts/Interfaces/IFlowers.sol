@@ -14,7 +14,7 @@ interface IFlowers is IERC721{
         uint256 petalsAmount
         );
 
-    function upgradePetals(address to, uint256 id, uint256 amount) external;
+    // function upgradePetals(address to, uint256 id, uint256 amount) external;
 
     function balanceOfPetals(address to, uint256 nftId) external view returns(uint256);
 }

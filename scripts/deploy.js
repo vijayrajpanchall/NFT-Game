@@ -37,12 +37,6 @@ async function main() {
   const nftStaking = await NFTStaking.deploy(flowerTokenAddress, energyTokenAddress);
 
   console.log("NFTStaking deployed to:", nftStaking.address);
-
-  //for upgrading flowers
-  const UpgradeFlowers = await ethers.getContractFactory("upgrade");
-  const upgradeFlowers = await UpgradeFlowers.deploy(flowerTokenAddress, energyTokenAddress);
-
-  console.log("UpgradeFlowers deployed to:", upgradeFlowers.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

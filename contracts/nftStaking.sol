@@ -1,31 +1,35 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract stakeFlowers  is Ownable, ReentrancyGuard {
-    using SafeERC20 for IERC20;
+import "./Interfaces/IEnergyToken.sol";
 
-    IERC20 public immutable rewardsToken;
-    IERC721 public immutable nftCollection;
+contract stakeFlowers  is Ownable, ReentrancyGuard {
+    using SafeERC20 for IEnergyToken;
+
+    // Interfaces for Energy Token and Flower NFT
+    IEnergyToken public immutable energyToken;
+    IERC721 public immutable nftContract;
+    
+    // Staker info
     struct Staker {
         uint256 amountStaked;
         uint256 timeOfLastUpdate;
         uint256 unclaimedRewards;
     }
 
-    uint256 private rewardsPerHour = 1000;
+    uint256 public rewardsPerHour = 1000;
 
     mapping(address => Staker) public stakers;
     mapping(uint256 => address) public stakerAddress;
     address[] public stakersArray;
-    constructor(IERC721 _nftCollection, IERC20 _rewardsToken) {
-        nftCollection = _nftCollection;
-        rewardsToken = _rewardsToken;
+    constructor(IERC721 _nftContract, IEnergyToken _energyToken) {
+        nftContract = _nftContract;
+        energyToken = _energyToken;
     }
     function stake(uint256[] calldata _tokenIds) external nonReentrant {
         if (stakers[msg.sender].amountStaked > 0) {
@@ -37,10 +41,10 @@ contract stakeFlowers  is Ownable, ReentrancyGuard {
         uint256 len = _tokenIds.length;
         for (uint256 i; i < len; ++i) {
             require(
-                nftCollection.ownerOf(_tokenIds[i]) == msg.sender,
+                nftContract.ownerOf(_tokenIds[i]) == msg.sender,
                 "Can't stake tokens you don't own!"
             );
-            nftCollection.transferFrom(msg.sender, address(this), _tokenIds[i]);
+            nftContract.transferFrom(msg.sender, address(this), _tokenIds[i]);
             stakerAddress[_tokenIds[i]] = msg.sender;
         }
         stakers[msg.sender].amountStaked += len;
@@ -57,7 +61,7 @@ contract stakeFlowers  is Ownable, ReentrancyGuard {
         for (uint256 i; i < len; ++i) {
             require(stakerAddress[_tokenIds[i]] == msg.sender);
             stakerAddress[_tokenIds[i]] = address(0);
-            nftCollection.transferFrom(address(this), msg.sender, _tokenIds[i]);
+            nftContract.transferFrom(address(this), msg.sender, _tokenIds[i]);
         }
         stakers[msg.sender].amountStaked -= len;
         stakers[msg.sender].timeOfLastUpdate = block.timestamp;
@@ -72,11 +76,12 @@ contract stakeFlowers  is Ownable, ReentrancyGuard {
     }
     function claimRewards() external {
         uint256 rewards = calculateRewards(msg.sender) +
-            stakers[msg.sender].unclaimedRewards;
+        stakers[msg.sender].unclaimedRewards;
         require(rewards > 0, "You have no rewards to claim");
         stakers[msg.sender].timeOfLastUpdate = block.timestamp;
         stakers[msg.sender].unclaimedRewards = 0;
-        rewardsToken.safeTransfer(msg.sender, rewards);
+        energyToken.mint(address(this),rewards);
+        energyToken.safeTransfer(msg.sender, rewards);
     }
     function setRewardsPerHour(uint256 _newValue) public onlyOwner {
         address[] memory _stakers = stakersArray;
