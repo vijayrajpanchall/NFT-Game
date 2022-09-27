@@ -7,7 +7,8 @@
     "@openzeppelin/contracts": "^4.7.3",
     "@openzeppelin/test-helpers": "^0.5.16",
     "chai": "^4.3.6",
-    "hardhat": "^2.11.2"
+    "hardhat": "^2.11.2",
+    "prettier": "2.7.1"
   },
   "dependencies": {
     "@nomicfoundation/hardhat-network-helpers": "^1.0.6",

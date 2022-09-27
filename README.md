@@ -1,4 +1,4 @@
-# NFT Game - ERC721, Marketplace, Staking Reward
+# NFT Game - ERC721, Marketplace, NFT Staking
 
 This boilerplate demonstrates an advanced Hardhat use case, integrating other tools commonly used alongside Hardhat in the ecosystem.
 

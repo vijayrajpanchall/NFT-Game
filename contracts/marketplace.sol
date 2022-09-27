@@ -13,7 +13,7 @@ contract flowerMarketplace is ERC721Holder, ReentrancyGuard {
 
 
     // Interface for Flower NFT
-    IERC721 public immutable nftContract;
+    IERC721 public  nftContract;
 
     address payable  owner;
 
@@ -64,8 +64,9 @@ contract flowerMarketplace is ERC721Holder, ReentrancyGuard {
         marketingWallet = payable(_marketingWallet);
     } 
     
-    
-    /* Places an item for sale on the marketplace */
+    /**Users should be able to list their NFT’s for sale with Native token.
+     * Places an item for sale on the marketplace 
+     */
     function createMarketItem(uint256 tokenId, uint256 priceInEther) public nonReentrant {
         require(priceInEther >= 1 ether, "Price must be cannot be zero");         
             
@@ -144,7 +145,7 @@ contract flowerMarketplace is ERC721Holder, ReentrancyGuard {
 
     /* Calnce the sale of a marketplace item */
     /* Transfers ownership of the item */
-    function cancleMarketItem(uint256 itemId) public nonReentrant {
+    function cancelMarketItem(uint256 itemId) public nonReentrant {
         uint256 tokenId = idToMarketItem[itemId].tokenId;
         require(
             idToMarketItem[itemId].seller == msg.sender,

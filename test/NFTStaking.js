@@ -2,7 +2,7 @@ const { expect } = require("chai");
 const { ethers, hre } = require("hardhat");
 require("@nomiclabs/hardhat-waffle");
 
-describe.only("Staking Flowers", async function () {
+describe("Staking Flowers", async function () {
     let stakingContract;
     let nftContract;
     let tokenContract;

@@ -99,7 +99,7 @@ describe("Flowers", async function(){
         await energyToken.mint(contractOwner, 100);
 
         await expect(contractAddress.upgradeFlowers(1, energyToken.address, 9))
-            .to.revertedWith("Minimum amount is 10");
+            .to.revertedWith("Providing less energy tokens");
     });
 
     it("Should revert if user don't have sufficient energy token in account", async function () {
@@ -156,6 +156,13 @@ describe("Flowers", async function(){
 
         await expect(contractAddress.connect(user).upgradeFlowers(1, energyToken.address, 10))
             .to.revertedWith("You're not the owner of this token Id");
+    });
+
+    it("Owner can change per petal energy token required", async function () {
+        const defaultValue = await contractAddress.perPetalEnergyRequired();
+        await contractAddress.changePerPetalEnergyRequired(100);
+
+        expect(await contractAddress.perPetalEnergyRequired()).to.not.eql(defaultValue);
     });
 })
 
