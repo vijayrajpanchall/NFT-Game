@@ -10,7 +10,7 @@ import "./Interfaces/IEnergyToken.sol";
 contract flowers is ERC721, IFlowers, Ownable {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIdCounter;
-    IEnergyToken tokenContract;
+    IEnergyToken private tokenContract;
 
     mapping(address => mapping(uint256 => uint256)) private userOwnesPetals;
     mapping(address => bool) private whitelistedByOwner;
@@ -126,11 +126,11 @@ contract flowers is ERC721, IFlowers, Ownable {
     /**
      * @return Petal balance of a token Id 
      */
-    function balanceOfPetals(address to, uint256 nftId)
+    function balanceOfPetals(address account, uint256 tokenId)
         public
         view
         returns (uint256)
     {
-        return userOwnesPetals[to][nftId];
+        return userOwnesPetals[account][tokenId];
     }
 }
