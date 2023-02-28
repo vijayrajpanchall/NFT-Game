@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import "./Interfaces/IEnergyToken.sol";
 
-contract stakeFlowers  is Ownable, ReentrancyGuard {
+contract nftStaking  is Ownable, ReentrancyGuard {
     // Interfaces for Energy Token and Flower NFT
     IEnergyToken public immutable energyToken;
     IERC721 public immutable nftContract;
@@ -61,7 +61,7 @@ contract stakeFlowers  is Ownable, ReentrancyGuard {
             nftContract.transferFrom(msg.sender, address(this), _tokenIds[i]);
             stakerAddress[_tokenIds[i]] = msg.sender;
         }
-        stakers[msg.sender].amountStaked += len;
+        stakers[msg.sender].amountStaked += len;    //_tokenIds.length;
         stakers[msg.sender].timeOfLastUpdate = block.timestamp;
     }
 
@@ -101,9 +101,10 @@ contract stakeFlowers  is Ownable, ReentrancyGuard {
         uint256 rewards = calculateRewards(msg.sender) +
         stakers[msg.sender].unclaimedRewards;
         require(rewards > 0, "You have no rewards to claim");
+        require(rewards <= energyToken.balanceOf(address(this)), "Not enough tokens in the contract");
         stakers[msg.sender].timeOfLastUpdate = block.timestamp;
         stakers[msg.sender].unclaimedRewards = 0;
-        energyToken.mint(address(this),rewards);
+        // energyToken.mint(address(this),rewards);
         energyToken.transfer(msg.sender, rewards);
     }
 

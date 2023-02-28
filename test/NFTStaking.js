@@ -15,7 +15,7 @@ describe("Staking Flowers", async function () {
         staker = Staker;
         user1 = User1;
 
-        const StakingContract = await ethers.getContractFactory("stakeFlowers");
+        const StakingContract = await ethers.getContractFactory("nftStaking");
         const NftContract = await ethers.getContractFactory("flowers");
         const TokenContract = await ethers.getContractFactory("energyToken");
 
